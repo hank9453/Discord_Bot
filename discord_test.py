@@ -8,7 +8,6 @@ import calendar
 import operator
 import re
 import csv
-import keep_alive
 class DB:
   mydb = None
   def __init__(self):
@@ -580,5 +579,4 @@ async def help(ctx):
     embed.add_field(name="!查刀 +標記目標", value="查詢目標本日出刀狀況", inline=False)
     embed.add_field(name="!匯出 +年分 + 月分", value="匯出指定年月份的數據 \n ex: \n !匯出 2020 03", inline=False)
     await ctx.send(embed=embed)
-keep_alive.keep_alive()
 bot.run('<your token>')
