@@ -8,12 +8,14 @@ import calendar
 import operator
 import re
 import csv
+import keep_alive
+bot = commands.Bot(command_prefix='!')
 class DB:
   mydb = None
   def __init__(self):
     self.mydb  = mysql.connector.connect( host="<mysql_host>",user="<mysql_user>",passwd="<mysql_password>",database="<mysql_databass>")
   def connect(self):
-     self.mydb  = mysql.connector.connect( host="<mysql_host>",user="<mysql_user>",passwd="<mysql_password>",database="<mysql_databass>")
+    self.mydb  = mysql.connector.connect( host="<mysql_host>",user="<mysql_user>",passwd="<mysql_password>",database="<mysql_databass>")
   def commit(self):
     self.mydb.commit()
   def query(self, sql ,val=None):
@@ -40,13 +42,12 @@ class member_info :
       self.nickname = nickname
       self.damage = damage
       self.times = times
-      self.compensation_times = times
+      self.compensation_times = compensation_times
       self.first = first
       self.second = second
       self.third = third
       self.fourth = fourth
       self.fifth = fifth
-bot = commands.Bot(command_prefix='!')
 db = DB()
 @bot.event
 async def on_ready():
@@ -76,9 +77,9 @@ async def 加入軍團(ctx ,name :str):
     if len(myresult) != 0 :
         await ctx.send("已經註冊過了!🙄")
         return 0
-    sql = "INSERT INTO %s_member_list"%str(ctx.guild.owner.id)+ "(Discord_id, NickName) VALUES (%s, %s)"%(str(ctx.author.id), name)
+    sql = "INSERT INTO %s_member_list"%str(ctx.guild.owner.id)+ "(Discord_id,NickName) VALUES ('%s','%s')"%(str(ctx.author.id),name)
     db.query(sql)
-    db.query("CREATE TABLE %s_%sdata (Time DATETIME,Boss TINYINT,Damage INT , Compensation BOOLEAN)"%(str(ctx.guild.owner.id),str(ctx.author.id)))
+    db.query("CREATE TABLE %s_%sdata (Time DATETIME,Boss TINYINT,Damage INT,Compensation BOOLEAN)"%(str(ctx.guild.owner.id),str(ctx.author.id)))
     db.commit()
     await ctx.send("%s已成功寫入數據庫👍"%ctx.author.mention)
 @bot.command()
@@ -309,8 +310,11 @@ async def 匯出(ctx ,year:int,month:int):
         return 0
     for each in myresult :
       sql = "SELECT * FROM %s_%sdata WHERE Time > '%s-%s-1 00:00:00' AND Time< '%s-%s-1 00:00:00'"%(str(ctx.guild.owner.id),str(each[0]),year,month,year,month+1)
-      myresult = db.query(sql)
-      result = myresult.fetchall()
+      try :
+        myresult = db.query(sql)
+        result = myresult.fetchall()
+      except :
+        continue
       if len(result) == 0 :
           continue
       name = each[1]
@@ -323,19 +327,19 @@ async def 匯出(ctx ,year:int,month:int):
       fifth = 0
       for data in result :
           if data[1] == 1 :
-              first += int(data[2])
+            first += int(data[2])
           elif data[1]== 2 :
-              secend += int(data[2])
+            secend += int(data[2])
           elif data[1]== 3 :
-              third += int(data[2])
+            third += int(data[2])
           elif data[1]== 4 :
-              fourth += int(data[2])
+            fourth += int(data[2])
           elif data[1]== 5 :
-              fifth += int(data[2])
+            fifth += int(data[2])
           if data[3] == 0 :
-              normal += 1
-          elif data[3] == 1 :
-              compensation+=1
+            normal += 1
+          else :
+            compensation+=1
       damage = first+secend+third+fourth+fifth
       total_data.append(member_info(name,damage,normal,compensation,first/damage,secend/damage,third/damage,fourth/damage,fifth/damage))
     if len(total_data) == 0 :
@@ -348,7 +352,8 @@ async def 匯出(ctx ,year:int,month:int):
       writer.writerow(['遊戲暱稱', '傷害排名', '總傷害','基礎刀數','補償刀數','一王','二王','三王','四王','五王'])
       for i in range(len(total_data)) :
            writer.writerow([total_data[i].nickname,i+1,
-                           total_data[i].damage,total_data[i].times,
+                           total_data[i].damage,
+                           total_data[i].times,
                            total_data[i].compensation_times,
                            "%d%%"%(total_data[i].first*100)
                            ,"%d%%"%(total_data[i].second*100)
@@ -569,10 +574,11 @@ async def help(ctx):
     embed.add_field(name="!強制退出 +標記目標", value="僅限 **頻道創建者** 使用把您指定的數據從資料庫刪除", inline=False)
     embed.add_field(name="!個人資料", value="查詢個人資料", inline=False)
     embed.add_field(name="!填表 +Boss + 傷害 +補償(選擇填寫)", value="把您的傷害寫入資料庫 \n ex:\n !填表 1 3000000 \n!填表 4 3000000 補償", inline=False)
-    embed.add_field(name="!代填 + 標記目標+Boss + 傷害 +補償(選擇填寫)", value="把您的傷害寫入資料庫 \n ex:\n !填表 @姆咪 1 3000000 \n!填表 @姆咪 4 3000000 補償", inline=False)
+    embed.add_field(name="!代填 + 標記目標+Boss + 傷害 +補償(選擇填寫)", value="把您的傷害寫入資料庫 \n ex:\n !代填 @姆咪 1 3000000 \n!代填 @姆咪 4 3000000 補償", inline=False)
     embed.add_field(name="!修改傷害 +年月 + 時間 +傷害", value="修改已填入傷害 \n ex:\n !修改傷害 2020-03-11 02:08:01 300000", inline=False)
     embed.add_field(name="!改名 +您的遊戲暱稱", value="修改個人資料", inline=False)
     embed.add_field(name="!查刀 +標記目標", value="查詢目標本日出刀狀況", inline=False)
     embed.add_field(name="!匯出 +年分 + 月分", value="匯出指定年月份的數據 \n ex: \n !匯出 2020 03", inline=False)
     await ctx.send(embed=embed)
+keep_alive.keep_alive()
 bot.run('<your token>')
