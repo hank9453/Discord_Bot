@@ -9,7 +9,6 @@ import operator
 import re
 import csv
 import keep_alive
-bot = commands.Bot(command_prefix='!')
 class DB:
   mydb = None
   def __init__(self):
@@ -48,6 +47,7 @@ class member_info :
       self.third = third
       self.fourth = fourth
       self.fifth = fifth
+bot = commands.Bot(command_prefix='!')
 db = DB()
 @bot.event
 async def on_ready():
