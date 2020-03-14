@@ -565,9 +565,9 @@ async def 代填(ctx,tag : str,boss:int,damage : int,compesation :str = None):
 bot.remove_command('help')  
 @bot.command()
 async def help(ctx):
-    embed = discord.Embed(title="姆咪機器人", description="所有資料都是姆咪手動填上去的唷👍\n有參數必須在前加空格才能正常使用:", color=0xeee657)
+    embed = discord.Embed(title="姆咪機器人", description="所有資料都是姆咪手動填上去的唷👍\n有參數必須在前加空格才能正常使用", color=0xeee657)
     embed.add_field(name="!help", value="查看幫助", inline=False)
-    embed.add_field(name="!創立軍團", value="創建軍團資料庫", inline=False)
+    embed.add_field(name="!創立軍團", value="創建軍團資料庫\n**必須先輸入否則其他功能無法正常使用**", inline=False)
     embed.add_field(name="!加入軍團 +您的遊戲暱稱", value="把您的數據寫入資料庫", inline=False)
     embed.add_field(name="!軍團成員", value="查詢整個軍團資料", inline=False)
     embed.add_field(name="!退出軍團", value="把您的數據從資料庫刪除", inline=False)
